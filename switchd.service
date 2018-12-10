@@ -1,0 +1,22 @@
+[Unit]
+Description=switchd Service
+
+[Service]
+#Environment="INIT_POWER_STATE=on"
+#Environment="ASPNETCORE_ENVIRONMENT=RaspberryPi"
+#Environment="POWER_MAX=80"
+#Environment="POWER_MIN=75"
+#Environment="LISTEN_ADDR=:8000"
+#Environment="INTERVAL=10s"
+#Environment="POWER_ON_CMD=echo 0x1 > /sys/devices/platform/bcm2708_usb/buspower"
+#Environment="POWER_OFF_CMD=echo 0x0 > /sys/devices/platform/bcm2708_usb/buspower"
+WorkingDirectory=/tmp
+ExecStart=/usr/local/bin/switchd
+Restart=always
+RestartSec=10
+WatchdogSec=30
+SyslogIdentifier=switchd
+User=root
+
+[Install]
+WantedBy=multi-user.target
