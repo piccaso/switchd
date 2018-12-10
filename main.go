@@ -62,7 +62,7 @@ func bg() {
 		execEnv("POWER_ON_CMD", "echo 0x1 > /sys/devices/platform/bcm2708_usb/buspower")
 	}
 	if power == off {
-		execEnv("POWER_ON_CMD", "echo 0x0 > /sys/devices/platform/bcm2708_usb/buspower")
+		execEnv("POWER_OFF_CMD", "echo 0x0 > /sys/devices/platform/bcm2708_usb/buspower")
 	}
 }
 
