@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,13 +18,15 @@ const (
 	off string = "off"
 )
 
-var power string
+var power = getEnv("INIT_POWER_STATE", on)
+var powerMax = getIntEnv("POWER_MAX", 80)
+var powerMin = getIntEnv("POWER_MIN", 75)
 
 func newBatteryLevel(level int) {
-	if level >= 80 {
+	if level >= powerMax {
 		power = off
 	}
-	if level <= 75 {
+	if level <= powerMin {
 		power = on
 	}
 	log.Printf("batt=%v,power=%v\n", level, power)
@@ -46,9 +48,8 @@ func update(w http.ResponseWriter, r *http.Request) {
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/update", update).Methods("POST")
-	power = on
 	bg()
-	log.Fatal(http.ListenAndServe(getEnv("ADDR", ":8000"), router))
+	log.Fatal(http.ListenAndServe(getEnv("LISTEN_ADDR", ":8000"), router))
 }
 
 func bg() {
@@ -72,6 +73,16 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+func getIntEnv(key string, fallback int) int {
+	var value = getEnv(key, string(fallback))
+
+	var i, err = strconv.ParseInt(value, 10, 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return int(i)
+}
+
 func execEnv(key, fallback string) {
 	var cmd = getEnv(key, fallback)
 	var out, err = exec.Command("sh", "-c", cmd).CombinedOutput()
@@ -79,7 +90,6 @@ func execEnv(key, fallback string) {
 		log.Printf("cmd='%v', err='%v'", cmd, err)
 	}
 	if len(out) > 0 {
-		var outp = fmt.Sprintf("%s\n", out)
-		log.Println(strings.Trim(outp, "\n "))
+		log.Println(strings.Trim(string(out), "\n "))
 	}
 }
