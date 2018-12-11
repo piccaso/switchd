@@ -11,8 +11,44 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/gorilla/mux"
 )
+
+var (
+	mqttBroker   = getEnv("MQTT_BROKER", "tcp://iot.eclipse.org:1883")
+	mqttClientID = getEnv("MQTT_CLIENT_ID", "switchd")
+	mqttTopic    = getEnv("MQTT_TOPIC", "owntracks/me/fon")
+)
+
+func subscribe() {
+	mqtt.DEBUG = log.New(os.Stdout, "", 0)
+	mqtt.ERROR = log.New(os.Stdout, "", 0)
+	var opts = mqtt.NewClientOptions().AddBroker(mqttBroker).SetClientID(mqttClientID)
+	opts.SetKeepAlive(2 * time.Second)
+	opts.SetPingTimeout(1 * time.Second)
+	var client = mqtt.NewClient(opts)
+	var token = client.Connect()
+	token.Wait()
+	var err = token.Error()
+	if err != nil {
+		log.Fatal(err)
+	}
+	token = client.Subscribe(mqttTopic, 0, mqttMessageHandler)
+	token.Wait()
+	err = token.Error()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
+	var payload = msg.Payload()
+	log.Printf("mqtt payload=%s, topic=%v\n", payload, msg.Topic())
+	var r request
+	json.Unmarshal(payload, &r)
+	newBatteryLevel(r.Batt)
+}
 
 const (
 	on  string = "on"
@@ -69,6 +105,7 @@ func cmdHandler(w http.ResponseWriter, r *http.Request, p string) {
 // https://www.codementor.io/codehakase/building-a-restful-api-with-golang-a6yivzqdo
 
 func main() {
+	//go subscribe()
 	router := mux.NewRouter()
 	router.HandleFunc("/update", updateHandler).Methods("POST")
 	router.HandleFunc("/on", onHandler).Methods("GET", "POST")
