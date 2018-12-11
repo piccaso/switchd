@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net/http/httputil"
 
 	"github.com/gorilla/mux"
 )
@@ -33,10 +34,13 @@ func newBatteryLevel(level int) {
 }
 
 type request struct {
-	Batt int `json:"batt,omitempty,string"`
+	Batt int `json:"batt,omitempty"`
 }
 
 func update(w http.ResponseWriter, r *http.Request) {
+	var dump, _ = httputil.DumpRequest(r, true)
+	log.Println(string(dump))
+	
 	var req request
 	_ = json.NewDecoder(r.Body).Decode(&req)
 	newBatteryLevel(req.Batt)
