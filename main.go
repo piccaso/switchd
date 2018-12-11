@@ -22,7 +22,7 @@ var (
 )
 
 func subscribe() {
-	mqtt.DEBUG = log.New(os.Stdout, "", 0)
+	//mqtt.DEBUG = log.New(os.Stdout, "", 0)
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 	var opts = mqtt.NewClientOptions().AddBroker(mqttBroker).SetClientID(mqttClientID)
 	opts.SetKeepAlive(2 * time.Second)
@@ -105,7 +105,7 @@ func cmdHandler(w http.ResponseWriter, r *http.Request, p string) {
 // https://www.codementor.io/codehakase/building-a-restful-api-with-golang-a6yivzqdo
 
 func main() {
-	//go subscribe()
+	go subscribe()
 	router := mux.NewRouter()
 	router.HandleFunc("/update", updateHandler).Methods("POST")
 	router.HandleFunc("/on", onHandler).Methods("GET", "POST")

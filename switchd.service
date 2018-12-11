@@ -3,13 +3,13 @@ Description=switchd Service
 
 [Service]
 #Environment="INIT_POWER_STATE=on"
-#Environment="ASPNETCORE_ENVIRONMENT=RaspberryPi"
 #Environment="POWER_MAX=80"
 #Environment="POWER_MIN=75"
 #Environment="LISTEN_ADDR=:8000"
 #Environment="INTERVAL=10s"
 #Environment="POWER_ON_CMD=echo 0x1 > /sys/devices/platform/bcm2708_usb/buspower"
 #Environment="POWER_OFF_CMD=echo 0x0 > /sys/devices/platform/bcm2708_usb/buspower"
+#Environment="MQTT_BROKER=tcp://localhost:1883"
 WorkingDirectory=/tmp
 ExecStart=/usr/local/bin/switchd
 Restart=always
