@@ -74,7 +74,7 @@ func getEnv(key, fallback string) string {
 }
 
 func getIntEnv(key string, fallback int) int {
-	var value = getEnv(key, string(fallback))
+	var value = getEnv(key, strconv.Itoa(fallback))
 
 	var i, err = strconv.ParseInt(value, 10, 32)
 	if err != nil {
