@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	mqttBroker   = getEnv("MQTT_BROKER", "tcp://iot.eclipse.org:1883")
+	mqttBroker   = getEnv("MQTT_BROKER", "tcp://mqtt:1883")
 	mqttClientID = getEnv("MQTT_CLIENT_ID", "switchd")
-	mqttTopic    = getEnv("MQTT_TOPIC", "owntracks/me/fon")
+	mqttTopic    = getEnv("MQTT_TOPIC", "owntracks/+/+")
 )
 
 func subscribe() {
