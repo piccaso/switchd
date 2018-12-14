@@ -1,6 +1,6 @@
-## edit settings below and save file as: /etc/systemd/system/web.service
-## $ systemctl enable web.service
-## $ systemctl start web.service
+## edit settings below and save file as: /etc/systemd/system/switchd.service
+## $ systemctl enable switchd.service
+## $ systemctl start switchd.service
 
 [Unit]
 Description=switchd Service
