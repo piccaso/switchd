@@ -9,6 +9,8 @@ Description=switchd Service
 #Environment="INTERVAL=10s"
 #Environment="POWER_ON_CMD=echo 0x1 > /sys/devices/platform/bcm2708_usb/buspower"
 #Environment="POWER_OFF_CMD=echo 0x0 > /sys/devices/platform/bcm2708_usb/buspower"
+#Environment="POWER_ON_CMD=hub-ctrl -h 0 -P 2 -p 1"
+#Environment="POWER_OFF_CMD=hub-ctrl -h 0 -P 2 -p 0"
 #Environment="MQTT_BROKER=tcp://localhost:1883"
 WorkingDirectory=/tmp
 ExecStart=/usr/local/bin/switchd
