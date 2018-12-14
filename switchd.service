@@ -20,7 +20,6 @@ WorkingDirectory=/tmp
 ExecStart=/usr/local/bin/switchd
 Restart=always
 RestartSec=10
-WatchdogSec=30
 SyslogIdentifier=switchd
 User=root
 
