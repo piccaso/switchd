@@ -19,14 +19,20 @@ var (
 	mqttBroker   = getEnv("MQTT_BROKER", "tcp://mqtt:1883")
 	mqttClientID = getEnv("MQTT_CLIENT_ID", "switchd")
 	mqttTopic    = getEnv("MQTT_TOPIC", "owntracks/+/+")
+	mqttDebug    = getEnv("MQTT_DEBUG", "False")
 )
 
 func subscribe() {
-	//mqtt.DEBUG = log.New(os.Stdout, "", 0)
+	var debug,_ = strconv.ParseBool(mqttDebug)
+	if(debug){
+		mqtt.DEBUG = log.New(os.Stdout, "", 0)
+	}
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 	var opts = mqtt.NewClientOptions().AddBroker(mqttBroker).SetClientID(mqttClientID)
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
+	opts.AutoReconnect = true
+	opts.MaxReconnectInterval = 1 * time.Minute
 	var client = mqtt.NewClient(opts)
 	var token = client.Connect()
 	token.Wait()
@@ -57,7 +63,7 @@ const (
 
 var power = getEnv("INIT_POWER_STATE", on)
 var powerMax = getIntEnv("POWER_MAX", 80)
-var powerMin = getIntEnv("POWER_MIN", 75)
+var powerMin = getIntEnv("POWER_MIN", 78)
 
 func newBatteryLevel(level int) {
 	if level >= powerMax {
