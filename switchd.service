@@ -1,3 +1,7 @@
+## edit settings below and save file as: /etc/systemd/system/web.service
+## $ systemctl enable web.service
+## $ systemctl start web.service
+
 [Unit]
 Description=switchd Service
 
