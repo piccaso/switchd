@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gorilla/mux"
 )
 
@@ -22,17 +22,26 @@ var (
 	mqttDebug    = getEnv("MQTT_DEBUG", "False")
 )
 
+func connectionLost(client mqtt.Client, err error) {
+	log.Fatal(err)
+}
+
 func subscribe() {
-	var debug,_ = strconv.ParseBool(mqttDebug)
-	if(debug){
+	if len(mqttBroker) < 3 {
+		return
+	}
+	var debug, _ = strconv.ParseBool(mqttDebug)
+	if debug {
 		mqtt.DEBUG = log.New(os.Stdout, "", 0)
+		mqtt.WARN = log.New(os.Stdout, "", 0)
 	}
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
+	mqtt.CRITICAL = log.New(os.Stdout, "", 0)
+
 	var opts = mqtt.NewClientOptions().AddBroker(mqttBroker).SetClientID(mqttClientID)
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
-	opts.AutoReconnect = true
-	opts.MaxReconnectInterval = 1 * time.Minute
+	opts.OnConnectionLost = connectionLost
 	var client = mqtt.NewClient(opts)
 	var token = client.Connect()
 	token.Wait()
