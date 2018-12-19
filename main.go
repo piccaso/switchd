@@ -62,7 +62,7 @@ func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
 	log.Printf("mqtt payload=%s, topic=%v\n", payload, msg.Topic())
 	var r request
 	json.Unmarshal(payload, &r)
-	newBatteryLevel(r.Batt)
+	newBatteryLevel(r.Batt, r.Tst)
 }
 
 const (
@@ -73,19 +73,26 @@ const (
 var power = getEnv("INIT_POWER_STATE", on)
 var powerMax = getIntEnv("POWER_MAX", 80)
 var powerMin = getIntEnv("POWER_MIN", 78)
+var lastTimestamp uint64 = 1
 
-func newBatteryLevel(level int) {
+func newBatteryLevel(level int, timestamp uint64) {
+	if timestamp < lastTimestamp {
+		log.Printf("timestamp=%v is to small", timestamp)
+		return
+	}
 	if level >= powerMax {
 		power = off
 	}
 	if level <= powerMin {
 		power = on
 	}
-	log.Printf("batt=%v,power=%v\n", level, power)
+	lastTimestamp = timestamp
+	log.Printf("batt=%v,power=%v,timestamp=%v\n", level, power, timestamp)
 }
 
 type request struct {
-	Batt int `json:"batt,omitempty"`
+	Batt int    `json:"batt,omitempty"`
+	Tst  uint64 `json:"tst,omitempty"`
 }
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +101,7 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 	_ = json.NewDecoder(r.Body).Decode(&req)
-	newBatteryLevel(req.Batt)
+	newBatteryLevel(req.Batt, req.Tst)
 	json.NewEncoder(w).Encode(req)
 }
 
