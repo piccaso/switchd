@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -74,6 +75,7 @@ var power = getEnv("INIT_POWER_STATE", on)
 var powerMax = getIntEnv("POWER_MAX", 80)
 var powerMin = getIntEnv("POWER_MIN", 78)
 var lastTimestamp uint64 = 1
+var lastBatteryLevel int
 
 func newBatteryLevel(level int, timestamp uint64) {
 	if timestamp < lastTimestamp {
@@ -87,6 +89,7 @@ func newBatteryLevel(level int, timestamp uint64) {
 		power = on
 	}
 	lastTimestamp = timestamp
+	lastBatteryLevel = level
 	log.Printf("batt=%v,power=%v,timestamp=%v\n", level, power, timestamp)
 }
 
@@ -118,10 +121,33 @@ func cmdHandler(w http.ResponseWriter, r *http.Request, p string) {
 		power = p
 		var err = execCmd()
 		if err != nil {
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 		}
 	}
+}
+
+func dbgHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	k := vars["k"]
+	var response string
+
+	switch k {
+	case "timestamp":
+		response = fmt.Sprintf("%v", lastTimestamp)
+	case "power":
+		response = power
+	case "level":
+		response = fmt.Sprintf("%v", lastBatteryLevel)
+	}
+
+	if len(response) > 1 {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		response = "404 Not Found"
+	}
+	w.Write([]byte(response))
 }
 
 // https://www.codementor.io/codehakase/building-a-restful-api-with-golang-a6yivzqdo
@@ -132,6 +158,7 @@ func main() {
 	router.HandleFunc("/update", updateHandler).Methods("POST")
 	router.HandleFunc("/on", onHandler).Methods("GET", "POST")
 	router.HandleFunc("/off", offHandler).Methods("GET", "POST")
+	router.HandleFunc("/dbg/{k}", dbgHandler).Methods("GET")
 	bg()
 	log.Fatal(http.ListenAndServe(getEnv("LISTEN_ADDR", ":8000"), router))
 }
