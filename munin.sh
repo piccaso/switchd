@@ -14,7 +14,9 @@ output_config() {
 }
 
 output_values() {
+    echo "multigraph battery_charge"
     echo "batt.value $(charge_level)"
+    echo "\nmultigraph data_age"
     echo "age.value $(data_age)"
 }
 
