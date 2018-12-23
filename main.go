@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -77,8 +78,11 @@ var powerMax = getIntEnv("POWER_MAX", 80)
 var powerMin = getIntEnv("POWER_MIN", 78)
 var lastTimestamp uint64 = 1
 var lastBatteryLevel int
+var lock sync.Mutex
 
 func newBatteryLevel(level int, timestamp uint64) {
+	lock.Lock()
+	defer lock.Unlock()
 	if timestamp < lastTimestamp {
 		log.Printf("timestamp=%v is to small", timestamp)
 		return
@@ -118,6 +122,8 @@ func offHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cmdHandler(w http.ResponseWriter, r *http.Request, p string) {
+	lock.Lock()
+	defer lock.Unlock()
 	if p != power {
 		power = p
 		var err = execCmd()
@@ -133,6 +139,8 @@ func dbgHandler(w http.ResponseWriter, r *http.Request) {
 	k := vars["k"]
 	var response string
 	now := uint64(time.Now().Unix())
+	lock.Lock()
+	defer lock.Unlock()
 	age := now - lastTimestamp
 
 	switch k {
@@ -195,6 +203,8 @@ func bg() {
 }
 
 func execCmd() error {
+	lock.Lock()
+	defer lock.Unlock()
 	if power == on {
 		return execEnv("POWER_ON_CMD", "echo 0x1 > /sys/devices/platform/bcm2708_usb/buspower")
 	}
