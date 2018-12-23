@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -131,21 +132,29 @@ func dbgHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	k := vars["k"]
 	var response string
+	now := uint64(time.Now().Unix())
+	age := now - lastTimestamp
 
 	switch k {
 	case "timestamp":
 		response = fmt.Sprintf("%v", lastTimestamp)
 	case "power":
-		response = power
+		if power == on {
+			response = "1"
+		}
+		if power == off {
+			response = "0"
+		}
 	case "level":
 		response = fmt.Sprintf("%v", lastBatteryLevel)
+	case "age":
+		response = fmt.Sprintf("%v", age)
 	}
 
 	if len(response) > 1 {
 		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
-		response = "404 Not Found"
 	}
 	w.Write([]byte(response))
 }
@@ -159,6 +168,19 @@ func main() {
 	router.HandleFunc("/on", onHandler).Methods("GET", "POST")
 	router.HandleFunc("/off", offHandler).Methods("GET", "POST")
 	router.HandleFunc("/dbg/{k}", dbgHandler).Methods("GET")
+	muninDir := getEnv("MUNIN_DIR", "/var/cache/munin/www/")
+	fi, err := os.Stat(muninDir)
+	if err == nil && fi.IsDir() {
+		log.Printf("/munin -> %v\n", muninDir)
+		muninFs := http.FileServer(http.Dir(muninDir))
+		router.PathPrefix("/munin/").Handler(http.StripPrefix("/munin", muninFs))
+	} else {
+		if err == nil {
+			err = errors.New("not a directory")
+		}
+		log.Printf("Error stating munin directory '%v': %v\n", muninDir, err)
+	}
+
 	bg()
 	log.Fatal(http.ListenAndServe(getEnv("LISTEN_ADDR", ":8000"), router))
 }
