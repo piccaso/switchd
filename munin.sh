@@ -7,6 +7,7 @@ SWITCHD_HOST=${SWITCHD_HOST:-localhost:8000}
 output_config() {
     echo "multigraph battery_charge"
     echo "graph_title Battery Charge"
+    echo "graph_args -l 10 -u 85"
     echo "batt.label Charge"
     echo "\nmultigraph data_age"
     echo "graph_title Data Age"
