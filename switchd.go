@@ -134,14 +134,20 @@ func cmdHandler(w http.ResponseWriter, r *http.Request, p string) {
 	}
 }
 
-func dbgHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	k := vars["k"]
-	var response string
+func getDataAge() uint64 {
+
 	now := uint64(time.Now().Unix())
 	lock.Lock()
 	defer lock.Unlock()
 	age := now - lastTimestamp
+	return age
+}
+
+func dbgHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	k := vars["k"]
+	response := ""
+	status := http.StatusOK
 
 	switch k {
 	case "timestamp":
@@ -154,16 +160,18 @@ func dbgHandler(w http.ResponseWriter, r *http.Request) {
 			response = "0"
 		}
 	case "level":
-		response = fmt.Sprintf("%v", lastBatteryLevel)
+		age := getDataAge()
+		if age < 3600 {
+			response = fmt.Sprintf("%v", lastBatteryLevel)
+		}
 	case "age":
+		age := getDataAge()
 		response = fmt.Sprintf("%v", age)
+	default:
+		status = http.StatusNotFound
 	}
 
-	if len(response) > 1 {
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusNotFound)
-	}
+	w.WriteHeader(status)
 	w.Write([]byte(response))
 }
 
@@ -203,8 +211,12 @@ func bg() {
 }
 
 func execCmd() error {
+	age := getDataAge()
 	lock.Lock()
 	defer lock.Unlock()
+	if age > 3*60*60 {
+		power = on
+	}
 	if power == on {
 		return execEnv("POWER_ON_CMD", "echo 0x1 > /sys/devices/platform/bcm2708_usb/buspower")
 	}
