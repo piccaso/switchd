@@ -76,7 +76,7 @@ const (
 var power = getEnv("INIT_POWER_STATE", on)
 var powerMax = getIntEnv("POWER_MAX", 80)
 var powerMin = getIntEnv("POWER_MIN", 78)
-var lastTimestamp uint64 = 1
+var lastTimestamp = timeNow()
 var lastBatteryLevel int
 var lock sync.Mutex
 
@@ -134,9 +134,12 @@ func cmdHandler(w http.ResponseWriter, r *http.Request, p string) {
 	}
 }
 
-func getDataAge() uint64 {
+func timeNow() uint64 {
+	return uint64(time.Now().Unix())
+}
 
-	now := uint64(time.Now().Unix())
+func getDataAge() uint64 {
+	now := timeNow()
 	lock.Lock()
 	defer lock.Unlock()
 	age := now - lastTimestamp
